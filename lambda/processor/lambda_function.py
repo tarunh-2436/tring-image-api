@@ -59,8 +59,7 @@ def process_record(record):
                 fileSize = :fileSize,
                 contentType = :contentType,
                 extension = :extension,
-                processedAt = :processedAt,
-                lastUpdated = :lastUpdated
+                processedAt = :processedAt
         """,
         ExpressionAttributeNames={"#status": "status"},
         ExpressionAttributeValues={
@@ -69,7 +68,6 @@ def process_record(record):
             ":contentType": content_type,
             ":extension": extension,
             ":processedAt": timestamp,
-            ":lastUpdated": timestamp,
         },
     )
 
