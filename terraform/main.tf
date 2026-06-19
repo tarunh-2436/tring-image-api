@@ -16,6 +16,8 @@ provider "aws" {
 resource "aws_s3_bucket" "uploads" {
   bucket        = var.upload_bucket_name
   force_destroy = true
+
+  tags = var.default_tags
 }
 
 resource "aws_s3_bucket_public_access_block" "uploads" {
@@ -54,6 +56,8 @@ resource "aws_s3_bucket_cors_configuration" "upload_bucket_cors" {
 resource "aws_s3_bucket" "website" {
   bucket        = var.website_bucket_name
   force_destroy = true
+
+  tags = var.default_tags
 }
 
 resource "aws_s3_bucket_public_access_block" "website" {
@@ -92,10 +96,14 @@ resource "aws_dynamodb_table" "image_metadata" {
     projection_type = "ALL"
     range_key       = "createdAt"
   }
+
+  tags = var.default_tags
 }
 
 resource "aws_sqs_queue" "image_processing_dlq" {
   name = "ImageProcessingDLQ"
+
+  tags = var.default_tags
 }
 
 resource "aws_sqs_queue" "image_processing_queue" {
@@ -107,10 +115,13 @@ resource "aws_sqs_queue" "image_processing_queue" {
     deadLetterTargetArn = aws_sqs_queue.image_processing_dlq.arn
     maxReceiveCount     = 3
   })
+
+  tags = var.default_tags
 }
 
 resource "aws_sns_topic" "image_notifications" {
   name = "ImageProcessingNotifications"
+  tags = var.default_tags
 }
 
 resource "aws_sns_topic_subscription" "email_subscription" {
@@ -322,6 +333,8 @@ resource "aws_lambda_function" "api" {
       TABLE_NAME    = aws_dynamodb_table.image_metadata.name
     }
   }
+
+  tags = var.default_tags
 }
 
 resource "aws_lambda_function" "processor" {
@@ -341,6 +354,8 @@ resource "aws_lambda_function" "processor" {
       SNS_TOPIC_ARN = aws_sns_topic.image_notifications.arn
     }
   }
+
+  tags = var.default_tags
 }
 
 resource "aws_lambda_function" "pre_token_generation" {
@@ -352,6 +367,8 @@ resource "aws_lambda_function" "pre_token_generation" {
 
   filename         = "../lambda/pre_token_generation/pre_token_generation.zip"
   source_code_hash = filebase64sha256("../lambda/pre_token_generation/pre_token_generation.zip")
+
+  tags = var.default_tags
 }
 
 resource "aws_cognito_user_pool" "users" {
@@ -369,6 +386,8 @@ resource "aws_cognito_user_pool" "users" {
       lambda_version = "V2_0"
     }
   }
+
+  tags = var.default_tags
 }
 
 resource "aws_lambda_permission" "allow_cognito_pre_token" {
@@ -437,7 +456,9 @@ resource "aws_apigatewayv2_api" "image_api" {
       "authorization",
       "content-type"
     ]
-  }  
+  } 
+
+  tags = var.default_tags 
 }
 
 resource "aws_apigatewayv2_authorizer" "jwt" {
@@ -461,7 +482,7 @@ resource "aws_apigatewayv2_authorizer" "jwt" {
 
 resource "aws_apigatewayv2_stage" "dev" {
   api_id      = aws_apigatewayv2_api.image_api.id
-  name        = "dev"
+  name        = "$default"
   auto_deploy = true
 }
 
@@ -627,6 +648,8 @@ resource "aws_cloudfront_distribution" "website" {
   viewer_certificate {
     cloudfront_default_certificate = true
   }
+
+  tags = var.default_tags
 }
 
 resource "aws_s3_bucket_policy" "website" {

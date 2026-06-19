@@ -14,3 +14,7 @@ variable "upload_bucket_name" {
 variable "website_bucket_name" {
   type = string
 }
+
+variable "default_tags" {
+  type = map(string)
+}

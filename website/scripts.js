@@ -120,7 +120,7 @@ async function uploadImage() {
       return;
     }
 
-    const createResponse = await fetch(`${config.API_URL}/dev/images`, {
+    const createResponse = await fetch(`${config.API_URL}/images`, {
       method: "POST",
 
       headers: {
@@ -181,7 +181,7 @@ async function loadImages() {
       return;
     }
 
-    const response = await fetch(`${config.API_URL}/dev/images`, {
+    const response = await fetch(`${config.API_URL}/images`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -226,7 +226,7 @@ async function viewImage(imageId) {
   try {
     const token = getAccessToken();
 
-    const response = await fetch(`${config.API_URL}/dev/images/${imageId}`, {
+    const response = await fetch(`${config.API_URL}/images/${imageId}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

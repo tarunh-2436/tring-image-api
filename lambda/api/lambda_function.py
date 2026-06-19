@@ -1,4 +1,3 @@
-from fileinput import filename
 import json
 import uuid
 import os
@@ -29,6 +28,11 @@ def response(status_code, body):
     }
 
 
+def get_user_id(event):
+    claims = event["requestContext"]["authorizer"]["jwt"]["claims"]
+    return claims["sub"]
+
+
 def lambda_handler(event, context):
 
     method = event["requestContext"]["http"]["method"]
@@ -49,9 +53,7 @@ def lambda_handler(event, context):
 
 def create_image(event):
 
-    claims = event["requestContext"]["authorizer"]["jwt"]["claims"]
-
-    user_id = claims["sub"]
+    user_id = get_user_id(event)
 
     body = json.loads(event["body"])
 
@@ -70,7 +72,6 @@ def create_image(event):
             "filename": filename,
             "status": "PENDING",
             "createdAt": timestamp,
-            "updatedAt": timestamp,
         }
     )
 
@@ -88,35 +89,22 @@ def create_image(event):
 
 
 def list_images(event):
-    claims = event["requestContext"]["authorizer"]["jwt"]["claims"]
-
-    user_id = claims["sub"]
+    user_id = get_user_id(event)
 
     dynamodb_response = table.query(
         IndexName="CreatedAtIndex",
         KeyConditionExpression="userId = :userId",
         ExpressionAttributeValues={":userId": user_id},
         ScanIndexForward=False,
+        ProjectionExpression="imageId, filename, #status, createdAt",
+        ExpressionAttributeNames={"#status": "status"},
     )
 
-    images = []
-
-    for image in dynamodb_response["Items"]:
-
-        display_contents = {}
-        display_contents["imageId"] = image["imageId"]
-        display_contents["filename"] = image["filename"]
-        display_contents["status"] = image["status"]
-        display_contents["createdAt"] = image["createdAt"]
-        images.append(display_contents)
-
-    return response(200, {"images": images})
+    return response(200, {"images": dynamodb_response["Items"]})
 
 
 def get_image(event):
-    claims = event["requestContext"]["authorizer"]["jwt"]["claims"]
-
-    user_id = claims["sub"]
+    user_id = get_user_id(event)
 
     path_params = event.get("pathParameters") or {}
 
