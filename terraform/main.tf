@@ -7,6 +7,13 @@ terraform {
       version = "~> 6.0"
     }
   }
+
+  backend "s3" {
+    bucket       = "tarun-terraform-state"
+    key          = "image-processing-api-dynamodb/terraform.tfstate"
+    region       = "us-east-1"
+    use_lockfile = true
+  }  
 }
 
 provider "aws" {
